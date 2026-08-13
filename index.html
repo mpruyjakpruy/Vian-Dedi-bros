@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Mario Simple</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            border: 4px solid #fff;
+            background-color: #5c94fc;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="gameCanvas" width="800" height="400"></canvas>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Player (Mario)
+    const mario = {
+        x: 50,
+        y: 300,
+        width: 30,
+        height: 40,
+        color: 'red',
+        speed: 5,
+        velY: 0,
+        jumping: false
+    };
+
+    const gravity = 0.6;
+    const groundY = 340;
+
+    // Controls
+    const keys = {};
+    window.addEventListener('keydown', (e) => keys[e.key] = true);
+    window.addEventListener('keyup', (e) => keys[e.key] = false);
+
+    function update() {
+        if (keys['ArrowRight'] || keys['d']) {
+            if (mario.x < canvas.width - mario.width) mario.x += mario.speed;
+        }
+        if (keys['ArrowLeft'] || keys['a']) {
+            if (mario.x > 0) mario.x -= mario.speed;
+        }
+        if ((keys['ArrowUp'] || keys['w'] || keys[' ']) && !mario.jumping) {
+            mario.velY = -12;
+            mario.jumping = true;
+        }
+
+        mario.velY += gravity;
+        mario.y += mario.velY;
+
+        if (mario.y >= groundY) {
+            mario.y = groundY;
+            mario.velY = 0;
+            mario.jumping = false;
+        }
+
+        draw();
+        requestAnimationFrame(update);
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Ground
+        ctx.fillStyle = '#c84c0c';
+        ctx.fillRect(0, 380, canvas.width, 20);
+
+        // Mario
+        ctx.fillStyle = mario.color;
+        ctx.fillRect(mario.x, mario.y, mario.width, mario.height);
+    }
+
+    update();
+</script>
+
+</body>
+</html>

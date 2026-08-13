@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lizard Man 2 Player</title>
+    <title>Lizard Man 2 Player Custom</title>
     <style>
         body {
             margin: 0;
@@ -25,18 +25,24 @@
 </head>
 <body>
 
-<h3>P1: Tombol A/D/W | P2: Tombol Panah (Kiri/Kanan/Atas)</h3>
+<h3>P1: A/D/W | P2: Tombol Panah (Kiri/Kanan/Atas)</h3>
 <canvas id="gameCanvas" width="800" height="400"></canvas>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // --- MEMUAT GAMBAR KARAKTER ---
+    // --- MEMUAT GAMBAR PLAYER 1 ---
     let imageLoaded = false;
     const marioImg = new Image();
-    marioImg.src = 'https://snipboard.io/thcYHg.jpg'; // atau URL gambar kamu
+    marioImg.src = 'https://snipboard.io/thcYHg.jpg'; // File gambar Player 1
     marioImg.onload = () => { imageLoaded = true; };
+
+    // --- MEMUAT GAMBAR PLAYER 2 ---
+    let imageLoaded2 = false;
+    const lizard2Img = new Image();
+    lizard2Img.src = 'https://snipboard.io/Wv96kU.jpg'; // File gambar Player 2 (ubah ke 'lizard2.png' atau link lain)
+    lizard2Img.onload = () => { imageLoaded2 = true; };
 
     const worldWidth = 3200;
     let cameraX = 0;
@@ -44,28 +50,12 @@
     const groundY = 320;
 
     // --- PLAYER 1 ---
-    const p1 = {
-        x: 50,
-        y: 280,
-        width: 70,
-        height: 60,
-        speed: 5,
-        velY: 0,
-        jumping: false
-    };
+    const p1 = { x: 50, y: 280, width: 70, height: 60, speed: 5, velY: 0, jumping: false };
 
     // --- PLAYER 2 ---
-    const p2 = {
-        x: 120,
-        y: 280,
-        width: 70,
-        height: 60,
-        speed: 5,
-        velY: 0,
-        jumping: false
-    };
+    const p2 = { x: 120, y: 280, width: 70, height: 60, speed: 5, velY: 0, jumping: false };
 
-    // Objek Game
+    // Objek Level
     const pipes = [
         { x: 300, y: 300, width: 50, height: 80 },
         { x: 650, y: 280, width: 50, height: 100 },
@@ -78,7 +68,6 @@
         { x: 900, y: 220, width: 100, height: 30 }
     ];
 
-    // Controls
     const keys = {};
     window.addEventListener('keydown', (e) => {
         keys[e.code] = true;
@@ -89,7 +78,6 @@
     window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 
     function updatePlayer(player, isP2) {
-        // Kontrol Player 1 (A/D/W/Space)
         if (!isP2) {
             if (keys['KeyD']) if (player.x < worldWidth - player.width) player.x += player.speed;
             if (keys['KeyA']) if (player.x > 0) player.x -= player.speed;
@@ -97,9 +85,7 @@
                 player.velY = -12;
                 player.jumping = true;
             }
-        } 
-        // Kontrol Player 2 (Panah)
-        else {
+        } else {
             if (keys['ArrowRight']) if (player.x < worldWidth - player.width) player.x += player.speed;
             if (keys['ArrowLeft']) if (player.x > 0) player.x -= player.speed;
             if (keys['ArrowUp'] && !player.jumping) {
@@ -108,7 +94,6 @@
             }
         }
 
-        // Gravitasi & Pijakan
         player.velY += gravity;
         player.y += player.velY;
 
@@ -118,7 +103,6 @@
             player.jumping = false;
         }
 
-        // Balok
         blocks.forEach(b => {
             if (player.x + player.width > b.x && player.x < b.x + b.width) {
                 if (player.y + player.height >= b.y && player.y + player.height <= b.y + 15 && player.velY >= 0) {
@@ -134,7 +118,6 @@
         updatePlayer(p1, false);
         updatePlayer(p2, true);
 
-        // Kamera mengikuti posisi tengah antara Player 1 dan Player 2
         let avgX = (p1.x + p2.x) / 2;
         cameraX = avgX - canvas.width / 3;
         if (cameraX < 0) cameraX = 0;
@@ -150,18 +133,17 @@
         ctx.save();
         ctx.translate(-cameraX, 0);
 
-        // Tanah
+        // Tanah & Rintangan
         ctx.fillStyle = '#c84c0c';
         ctx.fillRect(0, 380, worldWidth, 20);
 
-        // Pipa & Balok
         ctx.fillStyle = '#00a800';
         pipes.forEach(p => ctx.fillRect(p.x, p.y, p.width, p.height));
 
         ctx.fillStyle = '#fcb000';
         blocks.forEach(b => ctx.fillRect(b.x, b.y, b.width, b.height));
 
-        // --- GAMBAR PLAYER 1 ---
+        // Gambar Player 1
         if (imageLoaded) {
             ctx.drawImage(marioImg, p1.x, p1.y, p1.width, p1.height);
         } else {
@@ -169,11 +151,9 @@
             ctx.fillRect(p1.x, p1.y, p1.width, p1.height);
         }
 
-        // --- GAMBAR PLAYER 2 (Diberi filter warna merah) ---
-        if (imageLoaded) {
-            ctx.drawImage(marioImg, p2.x, p2.y, p2.width, p2.height);
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.35)'; // Warna tint merah
-            ctx.fillRect(p2.x, p2.y, p2.width, p2.height);
+        // Gambar Player 2 (Berdasarkan gambar lizard2Img)
+        if (imageLoaded2) {
+            ctx.drawImage(lizard2Img, p2.x, p2.y, p2.width, p2.height);
         } else {
             ctx.fillStyle = '#ff0000';
             ctx.fillRect(p2.x, p2.y, p2.width, p2.height);

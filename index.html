@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lizard Man Game</title>
+    <title>Lizard Man Long Adventure</title>
     <style>
         body {
             margin: 0;
@@ -26,23 +26,27 @@
 </head>
 <body>
 
-<h3>Klik layar game, gunakan A / D / SPASI untuk main!</h3>
+<h3>Gunakan A / D / SPASI (Panah) untuk jalan ke kanan!</h3>
 <canvas id="gameCanvas" width="800" height="400"></canvas>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // --- MEMUAT GAMBAR LIZARD MAN ---
+    // --- MEMUAT GAMBAR KARAKTER ---
     let imageLoaded = false;
     const marioImg = new Image();
-    marioImg.src = 'https://snipboard.io/1JGsoA.jpg';
+    
+    // Ganti 'lizard.png' jika kamu pakai link langsung
+    marioImg.src = 'https://snipboard.io/tXknSv.jpg'; 
 
-    marioImg.onload = () => {
-        imageLoaded = true;
-    };
+    marioImg.onload = () => { imageLoaded = true; };
 
-    // --- MARIO / PLAYER ---
+    // --- MAP & KAMERA ---
+    const worldWidth = 3200; // Lebar dunia game (4x lipat dari layar biasa)
+    let cameraX = 0;
+
+    // --- PLAYER ---
     const mario = {
         x: 50,
         y: 280,
@@ -56,21 +60,39 @@
     const gravity = 0.6;
     const groundY = 320; 
 
-    // --- RINTANGAN & OBJEK ---
+    // --- PIPA (Tersebar sepanjang arena) ---
     const pipes = [
         { x: 300, y: 300, width: 50, height: 80 },
-        { x: 600, y: 280, width: 50, height: 100 }
+        { x: 650, y: 280, width: 50, height: 100 },
+        { x: 1100, y: 260, width: 50, height: 120 },
+        { x: 1550, y: 300, width: 50, height: 80 },
+        { x: 2000, y: 270, width: 50, height: 110 },
+        { x: 2500, y: 250, width: 50, height: 130 }
     ];
 
+    // --- BALOK MELAYANG (Tersebar) ---
     const blocks = [
         { x: 180, y: 240, width: 40, height: 30 },
         { x: 220, y: 240, width: 40, height: 30 },
-        { x: 450, y: 200, width: 80, height: 30 }
+        { x: 450, y: 200, width: 80, height: 30 },
+        { x: 850, y: 220, width: 100, height: 30 },
+        { x: 1300, y: 190, width: 120, height: 30 },
+        { x: 1750, y: 220, width: 80, height: 30 },
+        { x: 2200, y: 180, width: 100, height: 30 },
+        { x: 2700, y: 210, width: 80, height: 30 }
     ];
 
+    // --- MUSUH (Tersebar di beberapa titik) ---
     const enemies = [
-        { x: 400, y: 350, width: 30, height: 30, speed: 2, dir: -1 }
+        { x: 400, y: 350, width: 30, height: 30, speed: 2, dir: -1, minX: 360, maxX: 580 },
+        { x: 950, y: 350, width: 30, height: 30, speed: 2, dir: -1, minX: 800, maxX: 1050 },
+        { x: 1450, y: 350, width: 30, height: 30, speed: 3, dir: -1, minX: 1350, maxX: 1500 },
+        { x: 1900, y: 350, width: 30, height: 30, speed: 2, dir: -1, minX: 1700, maxX: 1950 },
+        { x: 2400, y: 350, width: 30, height: 30, speed: 3, dir: -1, minX: 2250, maxX: 2480 }
     ];
+
+    // --- BENDERA FINISH ---
+    const finishFlag = { x: 3000, y: 180, width: 20, height: 200 };
 
     // Controls
     const keys = {};
@@ -92,7 +114,7 @@
     function update() {
         // Gerak Kiri / Kanan
         if (keys['ArrowRight'] || keys['d'] || keys['D']) {
-            if (mario.x < canvas.width - mario.width) mario.x += mario.speed;
+            if (mario.x < worldWidth - mario.width) mario.x += mario.speed;
         }
         if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
             if (mario.x > 0) mario.x -= mario.speed;
@@ -143,7 +165,7 @@
         // Musuh
         enemies.forEach(e => {
             e.x += e.speed * e.dir;
-            if (e.x <= 250 || e.x >= 550) e.dir *= -1;
+            if (e.x <= e.minX || e.x >= e.maxX) e.dir *= -1;
 
             if (checkCollision(mario, e)) {
                 alert("Game Over! Kena musuh.");
@@ -152,6 +174,18 @@
             }
         });
 
+        // Cek Menang / Finish
+        if (checkCollision(mario, finishFlag)) {
+            alert("SELAMAT! Kamu berhasil mencapai Finish!");
+            mario.x = 50;
+            mario.y = 280;
+        }
+
+        // --- SISTEM KAMERA BERGERAK ---
+        cameraX = mario.x - canvas.width / 3;
+        if (cameraX < 0) cameraX = 0;
+        if (cameraX > worldWidth - canvas.width) cameraX = worldWidth - canvas.width;
+
         draw();
         requestAnimationFrame(update);
     }
@@ -159,11 +193,15 @@
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 1. Gambar Tanah
-        ctx.fillStyle = '#c84c0c';
-        ctx.fillRect(0, 380, canvas.width, 20);
+        // Geser kanvas sesuai posisi Kamera
+        ctx.save();
+        ctx.translate(-cameraX, 0);
 
-        // 2. Gambar Pipa Hijau
+        // 1. Gambar Tanah Panjang
+        ctx.fillStyle = '#c84c0c';
+        ctx.fillRect(0, 380, worldWidth, 20);
+
+        // 2. Gambar Pipa
         ctx.fillStyle = '#00a800';
         pipes.forEach(p => {
             ctx.fillRect(p.x, p.y, p.width, p.height);
@@ -171,7 +209,7 @@
             ctx.strokeRect(p.x, p.y, p.width, p.height);
         });
 
-        // 3. Gambar Balok Kuning
+        // 3. Gambar Balok
         ctx.fillStyle = '#fcb000';
         blocks.forEach(b => {
             ctx.fillRect(b.x, b.y, b.width, b.height);
@@ -185,18 +223,23 @@
             ctx.fillRect(e.x, e.y, e.width, e.height);
         });
 
-        // 5. GAMBAR KARAKTER
+        // 5. BENDERA FINISH (Garis Hijau + Kotak Merah)
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(finishFlag.x, finishFlag.y, finishFlag.width, finishFlag.height);
+        ctx.fillStyle = '#ff0000';
+        ctx.fillRect(finishFlag.x + 20, finishFlag.y, 40, 30);
+
+        // 6. GAMBAR KARAKTER LIZARD MAN
         if (imageLoaded) {
-            // Jika gambar lizard.png berhasil dimuat
             ctx.drawImage(marioImg, mario.x, mario.y, mario.width, mario.height);
         } else {
-            // Jika gambar belum dimuat / gagal, tampilkan kotak hijau
             ctx.fillStyle = '#228B22';
             ctx.fillRect(mario.x, mario.y, mario.width, mario.height);
         }
+
+        ctx.restore(); // Kembalikan posisi kanvas
     }
 
-    // Jalankan game secara langsung
     update();
 </script>
 

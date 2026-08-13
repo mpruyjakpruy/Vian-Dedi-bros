@@ -34,22 +34,27 @@
     const ctx = canvas.getContext('2d');
 
     // --- MEMUAT GAMBAR LIZARD MAN ---
+    let imageLoaded = false;
     const marioImg = new Image();
-    marioImg.src = 'lizard.png'; // Menggunakan gambar lizard.png yang kamu upload
+    marioImg.src = 'lizard.png'; 
+
+    marioImg.onload = () => {
+        imageLoaded = true;
+    };
 
     // --- MARIO / PLAYER ---
     const mario = {
         x: 50,
         y: 280,
-        width: 70,  // Lebar karakter disesuaikan agar proporsional
-        height: 60, // Tinggi karakter
+        width: 70,  
+        height: 60, 
         speed: 5,
         velY: 0,
         jumping: false
     };
 
     const gravity = 0.6;
-    const groundY = 320; // Posisi tanah diatur agar pas dengan kaki karakter
+    const groundY = 320; 
 
     // --- RINTANGAN & OBJEK ---
     const pipes = [
@@ -180,14 +185,19 @@
             ctx.fillRect(e.x, e.y, e.width, e.height);
         });
 
-        // 5. GAMBAR KARAKTER LIZARD MAN
-        ctx.drawImage(marioImg, mario.x, mario.y, mario.width, mario.height);
+        // 5. GAMBAR KARAKTER
+        if (imageLoaded) {
+            // Jika gambar lizard.png berhasil dimuat
+            ctx.drawImage(marioImg, mario.x, mario.y, mario.width, mario.height);
+        } else {
+            // Jika gambar belum dimuat / gagal, tampilkan kotak hijau
+            ctx.fillStyle = '#228B22';
+            ctx.fillRect(mario.x, mario.y, mario.width, mario.height);
+        }
     }
 
-    // Jalankan game setelah gambar berhasil di-load
-    marioImg.onload = () => {
-        update();
-    };
+    // Jalankan game secara langsung
+    update();
 </script>
 
 </body>

@@ -10,27 +10,32 @@
             padding: 0;
             background-color: #111;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            color: white;
+            font-family: sans-serif;
         }
         canvas {
             border: 4px solid #fff;
             background-color: #5c94fc;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
+<h3>Klik area game di bawah, lalu gunakan A / D / SPASI untuk main!</h3>
 <canvas id="gameCanvas" width="800" height="400"></canvas>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Player (Mario)
+    // Karakter Mario
     const mario = {
-        x: 50,
+        x: 100,
         y: 300,
         width: 30,
         height: 40,
@@ -43,26 +48,39 @@
     const gravity = 0.6;
     const groundY = 340;
 
-    // Controls
+    // Deteksi Tombol Keyboard
     const keys = {};
-    window.addEventListener('keydown', (e) => keys[e.key] = true);
-    window.addEventListener('keyup', (e) => keys[e.key] = false);
+    window.addEventListener('keydown', (e) => {
+        keys[e.key] = true;
+        // Mencegah halaman ke-scroll saat tekan spasi/panah
+        if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].indexOf(e.code) > -1) {
+            e.preventDefault();
+        }
+    });
+    window.addEventListener('keyup', (e) => {
+        keys[e.key] = false;
+    });
 
     function update() {
-        if (keys['ArrowRight'] || keys['d']) {
+        // Jalan Kiri / Kanan
+        if (keys['ArrowRight'] || keys['d'] || keys['D']) {
             if (mario.x < canvas.width - mario.width) mario.x += mario.speed;
         }
-        if (keys['ArrowLeft'] || keys['a']) {
+        if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
             if (mario.x > 0) mario.x -= mario.speed;
         }
-        if ((keys['ArrowUp'] || keys['w'] || keys[' ']) && !mario.jumping) {
+
+        // Lompat
+        if ((keys['ArrowUp'] || keys['w'] || keys['W'] || keys[' ']) && !mario.jumping) {
             mario.velY = -12;
             mario.jumping = true;
         }
 
+        // Fizik Gravitasi
         mario.velY += gravity;
         mario.y += mario.velY;
 
+        // Pijakan Tanah
         if (mario.y >= groundY) {
             mario.y = groundY;
             mario.velY = 0;
@@ -76,13 +94,17 @@
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Ground
+        // Gambar Tanah
         ctx.fillStyle = '#c84c0c';
         ctx.fillRect(0, 380, canvas.width, 20);
 
-        // Mario
+        // Gambar Mario (Kotak Merah)
         ctx.fillStyle = mario.color;
         ctx.fillRect(mario.x, mario.y, mario.width, mario.height);
+        
+        // Mata Mario (Pemanis biar kelihatan depan/belakang)
+        ctx.fillStyle = 'white';
+        ctx.fillRect(mario.x + 18, mario.y + 8, 6, 6);
     }
 
     update();

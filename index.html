@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lizard Man 2 Player Custom</title>
+    <title>Lizard Man 2 Player - Awas Babi!</title>
     <style>
         body {
             margin: 0;
@@ -25,35 +25,47 @@
 </head>
 <body>
 
-<h3>P1: A/D/W | P2: Tombol Panah (Kiri/Kanan/Atas)</h3>
+<h3>P1: A/D/W | P2: Panah Kiri/Kanan/Atas | Awas Musuh Babi!</h3>
 <canvas id="gameCanvas" width="800" height="400"></canvas>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // --- MEMUAT GAMBAR PLAYER 1 ---
+    // --- MEMUAT GAMBAR PLAYER 1 & 2 ---
     let imageLoaded = false;
     const marioImg = new Image();
-    marioImg.src = 'https://snipboard.io/thcYHg.jpg'; // File gambar Player 1
+    marioImg.src = 'https://snipboard.io/eUsP5W.jpg'; 
     marioImg.onload = () => { imageLoaded = true; };
 
-    // --- MEMUAT GAMBAR PLAYER 2 ---
     let imageLoaded2 = false;
     const lizard2Img = new Image();
-    lizard2Img.src = 'https://snipboard.io/Wv96kU.jpg'; // File gambar Player 2 (ubah ke 'lizard2.png' atau link lain)
+    lizard2Img.src = 'https://snipboard.io/M03zTc.jpg'; 
     lizard2Img.onload = () => { imageLoaded2 = true; };
+
+    // --- MEMUAT GAMBAR MUSUH BABI ---
+    let pigLoaded = false;
+    const pigImg = new Image();
+    // Kamu bisa ganti ke file 'babi.png' milikmu sendiri jika sudah ada di GitHub
+    pigImg.src = 'https://snipboard.io/i86dQS.jpg'; 
+    pigImg.onload = () => { pigLoaded = true; };
 
     const worldWidth = 3200;
     let cameraX = 0;
     const gravity = 0.6;
     const groundY = 320;
 
-    // --- PLAYER 1 ---
+    // --- PLAYER 1 & 2 ---
     const p1 = { x: 50, y: 280, width: 70, height: 60, speed: 5, velY: 0, jumping: false };
-
-    // --- PLAYER 2 ---
     const p2 = { x: 120, y: 280, width: 70, height: 60, speed: 5, velY: 0, jumping: false };
+
+    // --- DAFTAR MUSUH BABI (Jalan Bolak-Balik) ---
+    const pigs = [
+        { x: 450, y: 340, width: 40, height: 40, speed: 2, dir: -1, minX: 380, maxX: 600 },
+        { x: 950, y: 340, width: 40, height: 40, speed: 2.5, dir: -1, minX: 750, maxX: 1100 },
+        { x: 1500, y: 340, width: 40, height: 40, speed: 3, dir: -1, minX: 1300, maxX: 1700 },
+        { x: 2100, y: 340, width: 40, height: 40, speed: 2, dir: -1, minX: 1900, maxX: 2300 }
+    ];
 
     // Objek Level
     const pipes = [
@@ -76,6 +88,19 @@
         }
     });
     window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+    // Fungsi Cek Tabrakan
+    function checkCollision(rect1, rect2) {
+        return rect1.x < rect2.x + rect2.width &&
+               rect1.x + rect1.width > rect2.x &&
+               rect1.y < rect2.y + rect2.height &&
+               rect1.y + rect1.height > rect2.y;
+    }
+
+    function resetGame() {
+        p1.x = 50; p1.y = 280; p1.velY = 0;
+        p2.x = 120; p2.y = 280; p2.velY = 0;
+    }
 
     function updatePlayer(player, isP2) {
         if (!isP2) {
@@ -118,6 +143,22 @@
         updatePlayer(p1, false);
         updatePlayer(p2, true);
 
+        // --- UPDATE PERGERAKAN BABI & CEK TABRAKAN ---
+        pigs.forEach(pig => {
+            pig.x += pig.speed * pig.dir;
+            if (pig.x <= pig.minX || pig.x >= pig.maxX) pig.dir *= -1; // Balik arah
+
+            // Cek jika Player 1 atau Player 2 kena Babi
+            if (checkCollision(p1, pig)) {
+                alert("Game Over! Player 1 ditabrak Babi 🐖");
+                resetGame();
+            }
+            if (checkCollision(p2, pig)) {
+                alert("Game Over! Player 2 ditabrak Babi 🐖");
+                resetGame();
+            }
+        });
+
         let avgX = (p1.x + p2.x) / 2;
         cameraX = avgX - canvas.width / 3;
         if (cameraX < 0) cameraX = 0;
@@ -133,7 +174,7 @@
         ctx.save();
         ctx.translate(-cameraX, 0);
 
-        // Tanah & Rintangan
+        // Tanah & Pipa/Balok
         ctx.fillStyle = '#c84c0c';
         ctx.fillRect(0, 380, worldWidth, 20);
 
@@ -143,6 +184,16 @@
         ctx.fillStyle = '#fcb000';
         blocks.forEach(b => ctx.fillRect(b.x, b.y, b.width, b.height));
 
+        // --- GAMBAR MUSUH BABI ---
+        pigs.forEach(pig => {
+            if (pigLoaded) {
+                ctx.drawImage(pigImg, pig.x, pig.y, pig.width, pig.height);
+            } else {
+                ctx.fillStyle = '#ffc0cb'; // Cadangan warna pink jika gambar belum memuat
+                ctx.fillRect(pig.x, pig.y, pig.width, pig.height);
+            }
+        });
+
         // Gambar Player 1
         if (imageLoaded) {
             ctx.drawImage(marioImg, p1.x, p1.y, p1.width, p1.height);
@@ -151,7 +202,7 @@
             ctx.fillRect(p1.x, p1.y, p1.width, p1.height);
         }
 
-        // Gambar Player 2 (Berdasarkan gambar lizard2Img)
+        // Gambar Player 2
         if (imageLoaded2) {
             ctx.drawImage(lizard2Img, p2.x, p2.y, p2.width, p2.height);
         } else {

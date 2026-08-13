@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Mario Sederhana</title>
+    <title>Lizard Man Game</title>
     <style>
         body {
             margin: 0;
@@ -26,43 +26,43 @@
 </head>
 <body>
 
-<h3>Klik layar game, gunakan A/D atau Panah Kiri/Kanan & SPASI!</h3>
+<h3>Klik layar game, gunakan A / D / SPASI untuk main!</h3>
 <canvas id="gameCanvas" width="800" height="400"></canvas>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // --- MARIO ---
+    // --- MEMUAT GAMBAR LIZARD MAN ---
+    const marioImg = new Image();
+    marioImg.src = 'lizard.png'; // Menggunakan gambar lizard.png yang kamu upload
+
+    // --- MARIO / PLAYER ---
     const mario = {
         x: 50,
-        y: 300,
-        width: 30,
-        height: 40,
-        color: 'red',
+        y: 280,
+        width: 70,  // Lebar karakter disesuaikan agar proporsional
+        height: 60, // Tinggi karakter
         speed: 5,
         velY: 0,
         jumping: false
     };
 
     const gravity = 0.6;
-    const groundY = 340;
+    const groundY = 320; // Posisi tanah diatur agar pas dengan kaki karakter
 
     // --- RINTANGAN & OBJEK ---
-    // 1. Pipa Hijau
     const pipes = [
         { x: 300, y: 300, width: 50, height: 80 },
         { x: 600, y: 280, width: 50, height: 100 }
     ];
 
-    // 2. Balok Melayang
     const blocks = [
-        { x: 180, y: 250, width: 40, height: 30 },
-        { x: 220, y: 250, width: 40, height: 30 },
-        { x: 450, y: 220, width: 80, height: 30 }
+        { x: 180, y: 240, width: 40, height: 30 },
+        { x: 220, y: 240, width: 40, height: 30 },
+        { x: 450, y: 200, width: 80, height: 30 }
     ];
 
-    // 3. Musuh (Goomba)
     const enemies = [
         { x: 400, y: 350, width: 30, height: 30, speed: 2, dir: -1 }
     ];
@@ -75,11 +75,8 @@
             e.preventDefault();
         }
     });
-    window.addEventListener('keyup', (e) => {
-        keys[e.key] = false;
-    });
+    window.addEventListener('keyup', (e) => { keys[e.key] = false; });
 
-    // Fungsi Deteksi Tabrakan
     function checkCollision(rect1, rect2) {
         return rect1.x < rect2.x + rect2.width &&
                rect1.x + rect1.width > rect2.x &&
@@ -106,7 +103,7 @@
         mario.velY += gravity;
         mario.y += mario.velY;
 
-        // Pijakan Tanah Dasar
+        // Pijakan Tanah
         if (mario.y >= groundY) {
             mario.y = groundY;
             mario.velY = 0;
@@ -124,32 +121,29 @@
             }
         });
 
-        // Tabrakan Pipa (Penghalang)
+        // Tabrakan Pipa
         pipes.forEach(p => {
             if (checkCollision(mario, p)) {
-                // Berpijak di atas pipa
                 if (mario.y + mario.height - mario.velY <= p.y) {
                     mario.y = p.y - mario.height;
                     mario.velY = 0;
                     mario.jumping = false;
                 } else {
-                    // Menabrak samping pipa
                     if (keys['ArrowRight'] || keys['d']) mario.x = p.x - mario.width;
                     if (keys['ArrowLeft'] || keys['a']) mario.x = p.x + p.width;
                 }
             }
         });
 
-        // Gerakan & Tabrakan Musuh
+        // Musuh
         enemies.forEach(e => {
             e.x += e.speed * e.dir;
-            if (e.x <= 250 || e.x >= 550) e.dir *= -1; // Batas jalan musuh
+            if (e.x <= 250 || e.x >= 550) e.dir *= -1;
 
-            // Jika kena musuh -> Reset posisi Mario
             if (checkCollision(mario, e)) {
                 alert("Game Over! Kena musuh.");
                 mario.x = 50;
-                mario.y = 300;
+                mario.y = 280;
             }
         });
 
@@ -172,7 +166,7 @@
             ctx.strokeRect(p.x, p.y, p.width, p.height);
         });
 
-        // 3. Gambar Balok Koin Kuning
+        // 3. Gambar Balok Kuning
         ctx.fillStyle = '#fcb000';
         blocks.forEach(b => {
             ctx.fillRect(b.x, b.y, b.width, b.height);
@@ -180,20 +174,20 @@
             ctx.strokeRect(b.x, b.y, b.width, b.height);
         });
 
-        // 4. Gambar Musuh Cokelat
+        // 4. Gambar Musuh
         ctx.fillStyle = '#a84400';
         enemies.forEach(e => {
             ctx.fillRect(e.x, e.y, e.width, e.height);
         });
 
-        // 5. Gambar Mario
-        ctx.fillStyle = mario.color;
-        ctx.fillRect(mario.x, mario.y, mario.width, mario.height);
-        ctx.fillStyle = 'white';
-        ctx.fillRect(mario.x + 18, mario.y + 8, 6, 6);
+        // 5. GAMBAR KARAKTER LIZARD MAN
+        ctx.drawImage(marioImg, mario.x, mario.y, mario.width, mario.height);
     }
 
-    update();
+    // Jalankan game setelah gambar berhasil di-load
+    marioImg.onload = () => {
+        update();
+    };
 </script>
 
 </body>
